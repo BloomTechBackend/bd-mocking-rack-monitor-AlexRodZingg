@@ -6,6 +6,8 @@ import com.amazon.ata.mocking.rackmonitor.exceptions.RackMonitorException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,24 +22,52 @@ import static org.mockito.MockitoAnnotations.initMocks;  // initMocks is depreca
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class RackMonitorIncidentTest {
-    RackMonitor rackMonitor;
-    WingnutClient wingnutClient;
-    WarrantyClient warrantyClient;
-    Rack rack1;
-    Server unhealthyServer = new Server("TEST0001");
-    Server shakyServer = new Server("TEST0067");
-    Map<Server, Integer> rack1ServerUnits;
+// Mockito is framework for mocking in tests
+// A framework is a set of classes that make common programming requirements easier
+// Mockito is popular because it is easy to use and free
 
-    @BeforeEach
+public class RackMonitorIncidentTest {
+    // Instantiate objects used in the test
+    RackMonitor rackMonitor;        // The class with the methods we are testing
+
+// BEFORE Mocking we need to define references to any external class objects
+//    WingnutClient wingnutClient;    // Reference Object that may be used in a test
+//    WarrantyClient warrantyClient;  // Reference Object that may be used in a test
+//    Rack rack1;                     // Reference Object that may be used in a test
+
+// USING Mocks we define external class objects for Mocking
+// Mockito will manage use of the Mocked objects in the tests
+    @Mock
+        WingnutClient wingnutClient; // Reference Object that may be used in a test managed by Mockito
+    @Mock
+        WarrantyClient warrantyClient; // Reference Object that may be used in a test managed by Mockito
+    @Mock
+        Rack rack1; // Reference Object that may be used in a test managed by Mockito
+    Server unhealthyServer = new Server("TEST0001");    // Unhealthy server object (healthfactor < .8)
+    Server shakyServer = new Server("TEST0067");        // Shaky server object (healthfactor between .8 and .9)
+    Map<Server, Integer> rack1ServerUnits;                     // Hold the servers we are testing
+
+    @BeforeEach // Do this before each test is run
     void setUp() {
-        warrantyClient = new WarrantyClient();
-        wingnutClient = new WingnutClient();
-        rack1ServerUnits = new HashMap<>();
-        rack1ServerUnits.put(unhealthyServer, 1);
-        rack1 = new Rack("RACK01", rack1ServerUnits);
+        // BEFORE Mocking - instantiate objects used in the test and assign them to their reference
+//        warrantyClient = new WarrantyClient();    // These are @Mock'd, so we don't instantiate them
+//        wingnutClient = new WingnutClient();
+//        rack1 = new Rack("RACK01", rack1ServerUnits);
+
+        initMocks(this);    // Tells Mockito to prepare the @Mock objects for use
+                                    // initMocks() is deprecated, hence the strikeout; it's going to go away sometime
+        // MockitoAnnotations.openMocks(this); // replacement for deprecated initMocks(this)
+
+        rack1ServerUnits = new HashMap<>();         // Map of servers in our Rack for testing
+
+        rack1ServerUnits.put(unhealthyServer, 1);   // place our unhealthy server in server map with id of 1
+
+
+        // Define our RackMonitor with the Rack Object, WingnutClient Object, WarrantyClient Object, health thresholds
         rackMonitor = new RackMonitor(new HashSet<>(Arrays.asList(rack1)),
             wingnutClient, warrantyClient, 0.9D, 0.8D);
+        //                                          shaky,      unhealthy
+        //                                      threshold       threshold
     }
 
     @Test
